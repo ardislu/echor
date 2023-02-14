@@ -1,6 +1,7 @@
 [package]
 name = "echor"
 version = "0.1.0"
+description = "Display a line of text"
 edition = "2021"
 
 [dependencies]
