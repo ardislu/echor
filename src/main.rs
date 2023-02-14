@@ -8,17 +8,17 @@ struct Cli {
     no_newline: bool,
 
     /// The string to display
-    string: Option<String>,
+    string: Vec<String>,
 }
 
 fn main() {
     let cli = Cli::parse();
 
-    if let Some(string) = cli.string.as_deref() {
-        if cli.no_newline {
-            print!("{string}");
-        } else {
-            println!("{string}");
-        }
+    let output = cli.string.join(" ");
+
+    if cli.no_newline {
+        print!("{output}");
+    } else {
+        println!("{output}");
     }
 }
