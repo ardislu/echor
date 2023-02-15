@@ -9,3 +9,12 @@ clap = { version = "4.1.4", features = ["derive"] }
 
 [dev-dependencies]
 assert_cmd = "2.0.8"
+
+# Optimize the release build for minimum binary size:
+# https://github.com/johnthagen/min-sized-rust
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
