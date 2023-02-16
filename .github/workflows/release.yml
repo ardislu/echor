@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            file: "./target/release/echor"
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            file: "./target/release/echor"
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            file: "./target/release/echor.exe"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Rust
+        run: |
+          rustup target add ${{ matrix.target }}
+      - name: Compile executable
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+      - name: Upload executables to GitHub release
+        uses: csexton/release-asset-action@v2
+        with:
+          file: ${{ matrix.file }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          release-url: ${{ steps.create_release.outputs.upload_url }}
