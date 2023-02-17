@@ -11,23 +11,26 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            file: "./target/release/echor"
+            archive-cmd: tar czf "./echor-x86_64-unknown-linux-gnu.tar.gz" --directory="./target/release" echor
+            archive-file: "./echor-x86_64-unknown-linux-gnu.tar.gz"
           - os: macos-latest
             target: x86_64-apple-darwin
-            file: "./target/release/echor"
+            archive-cmd: 7z a "./echor-x86_64-apple-darwin.zip" "./target/release/echor"
+            archive-file: "./echor-x86_64-apple-darwin.zip"
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            file: "./target/release/echor.exe"
+            archive-cmd: 7z a "./echor-x86_64-pc-windows-msvc.zip" "./target/release/echor.exe"
+            archive-file: "./echor-x86_64-pc-windows-msvc.zip"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Setup Rust
-        run: |
-          rustup target add ${{ matrix.target }}
+        run: rustup target add ${{ matrix.target }}
       - name: Compile executable
-        run: |
-          cargo build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Create archive
+        run: ${{ matrix.archive-cmd }}
       - name: Create GitHub release
         id: create_release
         uses: actions/create-release@v1
@@ -36,9 +39,9 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
-      - name: Upload executables to GitHub release
+      - name: Upload archive to GitHub release
         uses: csexton/release-asset-action@v2
         with:
-          file: ${{ matrix.file }}
+          file: ${{ matrix.archive-file }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           release-url: ${{ steps.create_release.outputs.upload_url }}
