@@ -6,31 +6,45 @@ on:
 
 jobs:
   release:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            archive-cmd: tar czf "./echor-x86_64-unknown-linux-gnu.tar.gz" --directory="./target/release" echor
-            archive-file: "./echor-x86_64-unknown-linux-gnu.tar.gz"
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            archive-cmd: 7z a "./echor-x86_64-apple-darwin.zip" "./target/release/echor"
-            archive-file: "./echor-x86_64-apple-darwin.zip"
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            archive-cmd: 7z a "./echor-x86_64-pc-windows-msvc.zip" "./target/release/echor.exe"
-            archive-file: "./echor-x86_64-pc-windows-msvc.zip"
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Setup Rust
-        run: rustup target add ${{ matrix.target }}
-      - name: Compile executable
-        run: cargo build --release --target ${{ matrix.target }}
-      - name: Create archive
-        run: ${{ matrix.archive-cmd }}
+        run: |
+          rustup target add x86_64-apple-darwin
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-unknown-linux-gnu
+          rustup target add armv7-unknown-linux-gnueabihf
+          rustup target add aarch64-unknown-linux-gnu
+          rustup target add x86_64-pc-windows-msvc
+          rustup target add aarch64-pc-windows-msvc
+      - name: Install Zig
+        run: |
+          mkdir -p "$HOME/.zig/bin"
+          curl -sL https://ziglang.org/download/0.10.1/zig-linux-x86_64-0.10.1.tar.xz | tar -xJ --strip-components 1 -C ~/.local/bin zig-linux-x86_64-0.10.1/
+          export PATH="$HOME/.zig/bin:$PATH"
+      - name: Install cargo-zigbuild
+        run: |
+          curl -sL https://github.com/rust-cross/cargo-zigbuild/releases/download/v0.16.2/cargo-zigbuild-v0.16.2.x86_64-unknown-linux-musl.tar.gz | tar -xz -C "$HOME/.cargo/bin"
+      - name: Compile executables
+        run: |
+          cargo zigbuild --release --target x86_64-apple-darwin
+          cargo zigbuild --release --target aarch64-apple-darwin
+          cargo zigbuild --release --target x86_64-unknown-linux-gnu
+          cargo zigbuild --release --target armv7-unknown-linux-gnueabihf
+          cargo zigbuild --release --target aarch64-unknown-linux-gnu
+          cargo zigbuild --release --target x86_64-pc-windows-msvc
+          cargo zigbuild --release --target aarch64-pc-windows-msvc
+      - name: Create archives
+        run: |
+          zip -j "./dist/echor-x86_64-apple-darwin.zip" "./target/x86_64-apple-darwin/release/echor"
+          zip -j "./dist/echor-aarch64-apple-darwin.zip" "./target/aarch64-apple-darwin/release/echor"
+          tar -cz -f "./dist/echor-x86_64-unknown-linux-gnu.tar.gz" --directory="./target/x86_64-unknown-linux-gnu/release" echor
+          tar -cz -f "./dist/echor-armv7-unknown-linux-gnueabihf.tar.gz" --directory="./target/armv7-unknown-linux-gnueabihf/release" echor
+          tar -cz -f "./dist/echor-aarch64-unknown-linux-gnu.tar.gz" --directory="./target/aarch64-unknown-linux-gnu/release" echor
+          zip -j "./dist/echor-x86_64-pc-windows-msvc.zip" "./target/x86_64-pc-windows-msvc/release/echor"
+          zip -j "./dist/echor-aarch64-pc-windows-msvc.zip" "./target/aarch64-pc-windows-msvc/release/echor"
       - name: Create GitHub release
         id: create_release
         uses: actions/create-release@v1
@@ -42,6 +56,6 @@ jobs:
       - name: Upload archive to GitHub release
         uses: csexton/release-asset-action@v2
         with:
-          file: ${{ matrix.archive-file }}
+          pattern: "./dist/*"
           github-token: ${{ secrets.GITHUB_TOKEN }}
           release-url: ${{ steps.create_release.outputs.upload_url }}
