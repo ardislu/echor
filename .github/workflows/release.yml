@@ -22,6 +22,7 @@ jobs:
       - name: Install Zig
         run: |
           curl -sL https://ziglang.org/download/0.10.1/zig-linux-x86_64-0.10.1.tar.xz | tar -xJ --strip-components 1 -C $RUNNER_TOOL_CACHE zig-linux-x86_64-0.10.1/
+          export PATH="$RUNNER_TOOL_CACHE:$PATH"
       - name: Install cargo-zigbuild
         run: |
           curl -sL https://github.com/rust-cross/cargo-zigbuild/releases/download/v0.16.2/cargo-zigbuild-v0.16.2.x86_64-unknown-linux-musl.tar.gz | tar -xz -C "$HOME/.cargo/bin"
