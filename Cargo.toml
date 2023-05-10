@@ -5,10 +5,10 @@ description = "Display a line of text"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.1.8", features = ["derive"] }
+clap = { version = "4.2.7", features = ["derive"] }
 
 [dev-dependencies]
-assert_cmd = "2.0.8"
+assert_cmd = "2.0.11"
 
 # Optimize the release build for minimum binary size:
 # https://github.com/johnthagen/min-sized-rust
